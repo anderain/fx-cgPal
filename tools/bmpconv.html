@@ -1,0 +1,220 @@
+<html>
+	<head>
+		<title>Bitmap to List</title>
+	</head>
+	<body>
+		<div class="main-container">
+			<div class="p60 half-container">
+				<h1>Bitmap RGB888 to RGB565</h1>
+				<div class="inner-container">
+					<input type="file" onchange="readURL(this)">
+					<select>
+					  	<option value ="def">Default</option>
+					</select>
+					<img class="temp">
+					<textarea></textarea>
+				</div>
+			</div>
+			<div class="p40 half-container">
+				<canvas></canvas>
+			</div>
+		</div>
+	</body>
+	<script>
+		var results;
+
+		var canvas = document.querySelector('canvas');
+		canvas.width = 320;
+		canvas.height = 240;
+		var context = canvas.getContext('2d');
+
+		var textarea = document.querySelector('textarea');
+		var export_filename;
+		var export_varname;
+
+		function readURL(input) {
+		    var url = input.value;
+		   	export_filename = input.files[0].name + '.csv';
+			export_varname = 'data_' + input.files[0].name.replace(/\./g, '_');
+
+		    var ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase();
+		    if (input.files && input.files[0]&& (ext == "gif" || ext == "png" || ext == "jpeg" || ext == "jpg" || ext == "bmp")) {
+		        var reader = new FileReader();
+
+		        reader.onload = function (e) {
+		        	var image = document.querySelector('img');
+		        	image.src = e.target.result;
+		        	image.onload = function() {
+		        		context.drawImage(image, 0, 0);
+		        		var w = this.width;
+		        		var h = this.height;
+		        		imageData = context.getImageData(0, 0, w, h);
+		        		process(imageData, w, h);
+		        	}
+		        }
+
+		        reader.readAsDataURL(input.files[0]);
+		    }
+		}
+
+		function process(imageData, w, h) {
+			output_type = getOutputType();
+
+			var data = imageData.data;
+
+			var after = [];
+
+			for (var i = 0; i < data.length; i += 4) {
+				var r = data[i], g = data[i+1], b = data[i+2];
+				var color = (((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3);
+				after.push(color);
+			}
+
+			console.log(w, h, w * h, after.length);
+
+		  	if (output_type == 'def') {
+
+		  		for (var i = 0; i < data.length; i += 4) {
+		  			var r = data[i], g = data[i+1], b = data[i+2];
+
+		  			data[i] = (r >> 3 << 3);
+		  			data[i+1] = (g >> 2 << 2);
+		  			data[i+2] = (b >> 3 << 3);
+		  			data[i+3] = 255;
+		  		}
+		  		imageData.data = data;
+		  		context.putImageData(imageData , 0, 0);
+
+		  		result_list = [];
+		  		result_list.push('// width = ' + w + ", hegiht = " + h);
+		  		result_list.push('const color_t ' + export_varname + '[] = {');
+		  		i = 0;
+		  		s = "";
+			  	for (var i = 0; i < w * h; ++i) {
+			  		s = s + "0x" + after[i].toString(16) + ",";
+			  		if (i % 100 == 0 && i != 0) {
+			  			result_list.push(s);
+			  			s = "    ";
+			  		}
+		  		}
+		  		result_list.push(s);
+		  		result_list.push('};');
+		  	}
+		  	results = result_list;
+			textarea.value = generateText(results);
+		}
+		var s = "{";
+		for(i = 0; i < 50; ++i) {
+		    for (j = 0; j < 50; ++j) {
+		    	var seed = parseInt(Math.random() * 1000);
+		       	var t = 0;
+		       	if (seed > 900) t = 3;
+		       	else if (seed > 800) t = 2;
+		       	else if (seed > 500) t = 1;
+		       	s += "" + t + ", ";
+		    }
+		    s += "},\n{";
+		}
+
+		function generateText(data) {
+			if (!data || data == undefined) return ''
+		  	var content = "";
+		  	for (var i = 0; i < data.length; ++i) {
+		  		content += data[i] + "\r\n";
+		  	}
+		  	return content;
+		}
+
+		function getOutputType() {
+			var select = document.querySelector('select');
+			return select.value;
+		}
+	</script>
+	<style>
+		body {
+			padding: 0px;
+			margin: 0px;
+			background-color: #666;
+		}
+     	.main-container {
+     		width: 600px;
+     		/*height: 85%;*/
+     		position: absolute;
+     		left: 50%;
+     		top: 50%;
+     		transform: translate(-50%, -50%);
+     		border-radius: 10px;
+     		box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.3);
+     		border: 1px solid #333;
+     		background-color: white;
+     		padding: 20px;
+     		/*overflow-y: scroll;*/
+     	}
+     	.p40 {
+     		width: 40%;
+     	}
+     	.p60 {
+     		width: 60%;
+     	}
+     	.half-container {
+     		display: inline-block;
+     		float: left;
+     	}
+     	.inner-container {
+			margin-right: 15px;
+     	}
+		img.temp {
+			display: none;
+		}
+		img.calc {
+			margin: 8px;
+			width: 100%;
+		}
+		h1 {
+			font-size: 18px;
+			font-family: 'courier new', 'monospace';
+		}
+		input {
+			width: 100%;
+			padding: 8px;
+			border: 1px solid #333;
+			margin-bottom: 8px;
+			display: block;
+			border-radius: 4px;
+		}
+		select {
+			width: 100%;
+			padding: 8px;
+			border: 1px solid #333;
+			margin-bottom: 8px;
+			display: block;
+			border-radius: 4px;
+			font-family: 'courier new', 'monospace';
+		}
+		button {
+			border: 1px solid #333;
+			width: 100%;
+			height: 32px;
+			margin-bottom: 8px;
+			border-radius: 4px;
+			background-color: #999;
+		}
+		textarea {
+			width: 100%;
+			height: 300px;
+			margin-bottom: 8px;
+			font-family: 'courier new', 'monospace';
+			border: 1px solid #333;
+			border-radius: 4px;
+		}
+		canvas {
+			width: 600px;
+            image-rendering: optimizeSpeed;             /* Older versions of FF          */
+            image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+            image-rendering: -webkit-optimize-contrast; /* Safari                        */
+            image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+            image-rendering: pixelated;                 /* Awesome future-browsers       */
+            -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+		}
+	</style>
+</html>
