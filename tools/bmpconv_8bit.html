@@ -5,7 +5,7 @@
 	<body>
 		<div class="main-container">
 			<div class="p60 half-container">
-				<h1>Bitmap RGB888 to RGB565</h1>
+				<h1>Bitmap RGB888 to Palette256</h1>
 				<div class="inner-container">
 					<input type="file" onchange="readURL(this)">
 					<select>
@@ -24,8 +24,8 @@
 		var results;
 
 		var canvas = document.querySelector('canvas');
-		canvas.width = 1000;
-		canvas.height = 1000;
+		canvas.width = 640;
+		canvas.height = 640;
 		var context = canvas.getContext('2d');
 
 		var textarea = document.querySelector('textarea');
@@ -64,56 +64,77 @@
 
 			var after = [];
 
+			var palette = [];
+			var index = -1;
+			var color_to_palette = {};
+
 			for (var i = 0; i < data.length; i += 4) {
 				var r = data[i], g = data[i+1], b = data[i+2];
+
 				var color = (((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3);
-				after.push(color);
+				
+				if (!color_to_palette.hasOwnProperty(color)) {
+					palette.push(color);
+					index++;
+					color_to_palette[color] = index;
+				}
+
+				after.push(color_to_palette[color]);
 			}
 
-			console.log(w, h, w * h, after.length);
+			// console.log(palette, color_to_palette, after);
+			console.log(w, h, palette.length);
 
-		  	if (output_type == 'def') {
+			var result_list = [];
 
-		  		for (var i = 0; i < data.length; i += 4) {
-		  			var r = data[i], g = data[i+1], b = data[i+2];
+			var brlf_size;
 
-		  			data[i] = (r >> 3 << 3);
-		  			data[i+1] = (g >> 2 << 2);
-		  			data[i+2] = (b >> 3 << 3);
-		  			data[i+3] = 255;
-		  		}
-		  		imageData.data = data;
-		  		context.putImageData(imageData , 0, 0);
+			if (after.length < 2014)
+				brlf_size = parseInt(after.length / 10);
+			else
+				brlf_size = parseInt(after.length / 50);
 
-		  		result_list = [];
-		  		result_list.push('// width = ' + w + ", hegiht = " + h);
-		  		result_list.push('const color_t ' + export_varname + '[] = {');
-		  		i = 0;
-		  		s = "";
-			  	for (var i = 0; i < w * h; ++i) {
-			  		s = s + "0x" + after[i].toString(16) + ",";
-			  		if (i % 100 == 0 && i != 0) {
-			  			result_list.push(s);
-			  			s = "    ";
-			  		}
-		  		}
-		  		result_list.push(s);
-		  		result_list.push('};');
-		  	}
+			if (brlf_size <= 0) brlf_size = after.length;
+			console.log(brlf_size);
+			var brlf_count = 0;
+
+			result_list.push('const color_t ' + export_varname + '_palette[] = {');
+
+			var s = '    ';
+
+			for (var i = 0; i < palette.length; ++i) {
+				s = s + '0x' + palette[i].toString(16) + ',';
+			}
+			result_list.push(s);
+
+			result_list.push('};');
+
+			result_list.push('const unsigned char ' + export_varname + '_image[] = {');
+
+			s = '    ';
+			for (var i = 0; i < after.length; ++i) {
+				s = s + after[i] + ',';
+				brlf_count++;
+				if (brlf_count >= brlf_size) {
+					result_list.push(s);
+					s = '    ';
+					brlf_count = 0;
+				}
+			}
+			if (brlf_count > 0)
+				result_list.push(s);
+
+			result_list.push('};');
+
+			result_list.push('const PALETTED_IMAGE ' + export_varname + ' = {');
+			result_list.push('    .width = ' + w + ',');
+			result_list.push('    .height = ' + h + ',');
+			result_list.push('    .palette = ' + export_varname + '_palette,');
+			result_list.push('    .image = ' + export_varname + '_image');
+			result_list.push('};');
+
 		  	results = result_list;
 			textarea.value = generateText(results);
-		}
-		var s = "{";
-		for(i = 0; i < 50; ++i) {
-		    for (j = 0; j < 50; ++j) {
-		    	var seed = parseInt(Math.random() * 1000);
-		       	var t = 0;
-		       	if (seed > 900) t = 3;
-		       	else if (seed > 800) t = 2;
-		       	else if (seed > 500) t = 1;
-		       	s += "" + t + ", ";
-		    }
-		    s += "},\n{";
 		}
 
 		function generateText(data) {

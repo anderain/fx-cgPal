@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{75b7689f-4c11-4506-abf1-eaa68ed95a99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{44deb94f-4376-4a24-b616-53b474c9e3ff}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="fx-cgPal.c">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\graphProvider.c">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\inputProvider.c">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\res.c">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\fileProvider.c">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\app.c">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\graphProvider.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\inputProvider.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\res.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\fileProvider.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
